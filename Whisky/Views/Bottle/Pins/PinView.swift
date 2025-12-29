@@ -30,37 +30,65 @@ struct PinView: View {
     @State private var name: String = ""
     @State private var opening: Bool = false
 
+    @State private var isHovering: Bool = false
+
     var body: some View {
-        VStack {
-            Group {
-                if let image = image {
-                    image
-                        .resizable()
-                } else {
-                    Image(systemName: "app.dashed")
-                        .resizable()
+        VStack(spacing: 8) {
+            ZStack {
+                // Background glow effect when hovering
+                RoundedRectangle(cornerRadius: 16)
+                    .fill(.purple.opacity(isHovering ? 0.15 : 0))
+                    .blur(radius: 10)
+                
+                Group {
+                    if let image = image {
+                        image
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                    } else {
+                        Image(systemName: "gamecontroller.fill")
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                            .foregroundStyle(.purple.opacity(0.6))
+                    }
                 }
+                .frame(width: 52, height: 52)
+                .scaleEffect(opening ? 1.5 : isHovering ? 1.1 : 1)
+                .opacity(opening ? 0 : 1)
+                .animation(.spring(response: 0.3, dampingFraction: 0.6), value: isHovering)
             }
-            .frame(width: 45, height: 45)
-            .scaleEffect(opening ? 2 : 1)
-            .opacity(opening ? 0 : 1)
-            Spacer()
+            
             Text(name)
+                .font(.caption)
+                .fontWeight(.medium)
                 .multilineTextAlignment(.center)
                 .lineLimit(2, reservesSpace: true)
         }
-        .frame(width: 90, height: 90)
+        .frame(width: 100, height: 100)
         .padding(10)
+        .background {
+            RoundedRectangle(cornerRadius: 16)
+                .fill(.ultraThinMaterial)
+                .opacity(isHovering ? 1 : 0.5)
+        }
         .overlay {
-            HStack {
+            // Play button overlay
+            VStack {
                 Spacer()
-                Image(systemName: "play.fill")
-                    .resizable()
-                    .foregroundColor(.green)
-                    .frame(width: 16, height: 16)
+                HStack {
+                    Spacer()
+                    Image(systemName: "play.circle.fill")
+                        .font(.system(size: 24))
+                        .foregroundStyle(.purple)
+                        .opacity(isHovering ? 1 : 0)
+                        .scaleEffect(isHovering ? 1 : 0.5)
+                        .animation(.spring(response: 0.3), value: isHovering)
+                }
             }
-            .frame(width: 45, height: 45)
-            .padding(EdgeInsets(top: 0, leading: 0, bottom: 12, trailing: 0))
+            .padding(8)
+        }
+        .onHover { hovering in
+            isHovering = hovering
         }
         .contextMenu {
             ProgramMenuView(program: program, path: $path)
@@ -76,6 +104,11 @@ struct PinView: View {
         }
         .onTapGesture(count: 2) {
             runProgram()
+        }
+        .onTapGesture(count: 1) {
+            if isHovering {
+                runProgram()
+            }
         }
         .sheet(isPresented: $showRenameSheet) {
             RenameView("rename.pin.title", name: name) { newName in

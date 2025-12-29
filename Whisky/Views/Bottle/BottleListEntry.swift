@@ -29,18 +29,23 @@ struct BottleListEntry: View {
     @State private var name: String = ""
 
     var body: some View {
-        Text(name)
-            .opacity(bottle.isAvailable ? 1.0 : 0.5)
-            .onChange(of: refresh, initial: true) {
-                name = bottle.settings.name
+        HStack(spacing: 8) {
+            Image(systemName: "gamecontroller.fill")
+                .foregroundStyle(.purple.gradient)
+                .font(.system(size: 14))
+            Text(name)
+        }
+        .opacity(bottle.isAvailable ? 1.0 : 0.5)
+        .onChange(of: refresh, initial: true) {
+            name = bottle.settings.name
+        }
+        .sheet(isPresented: $showBottleRename) {
+            RenameView("rename.bottle.title", name: name) { newName in
+                name = newName
+                bottle.rename(newName: newName)
             }
-            .sheet(isPresented: $showBottleRename) {
-                RenameView("rename.bottle.title", name: name) { newName in
-                    name = newName
-                    bottle.rename(newName: newName)
-                }
-            }
-            .contextMenu {
+        }
+        .contextMenu {
                 Button("button.rename", systemImage: "pencil.line") {
                     showBottleRename.toggle()
                 }

@@ -29,16 +29,32 @@ struct FileOpenView: View {
 
     var body: some View {
         NavigationStack {
-            Form {
-                Picker("run.bottle", selection: $selection) {
-                    ForEach(bottles, id: \.self) {
-                        Text($0.settings.name)
+            VStack(spacing: 0) {
+                // Header with file info
+                VStack(spacing: 12) {
+                    Image(systemName: fileURL.pathExtension.lowercased() == "msi" ? "shippingbox.fill" : "app.fill")
+                        .font(.system(size: 40))
+                        .foregroundStyle(.purple.gradient)
+                    Text(fileURL.lastPathComponent)
+                        .font(.headline)
+                        .lineLimit(1)
+                }
+                .padding(.vertical, 20)
+                
+                Form {
+                    Picker("run.bottle", selection: $selection) {
+                        ForEach(bottles, id: \.self) {
+                            HStack {
+                                Image(systemName: "gamecontroller.fill")
+                                    .foregroundStyle(.purple)
+                                Text($0.settings.name)
+                            }
                             .tag($0.url)
+                        }
                     }
                 }
+                .formStyle(.grouped)
             }
-            .frame(maxHeight: .infinity)
-            .formStyle(.grouped)
             .navigationTitle(String(format: String(localized: "run.title"), fileURL.lastPathComponent))
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -52,6 +68,8 @@ struct FileOpenView: View {
                         run()
                     }
                     .keyboardShortcut(.defaultAction)
+                    .buttonStyle(.borderedProminent)
+                    .tint(.purple)
                 }
             }
         }

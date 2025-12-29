@@ -32,37 +32,51 @@ struct BottleCreationView: View {
 
     var body: some View {
         NavigationStack {
-            Form {
-                TextField("create.name", text: $newBottleName)
-                    .onChange(of: newBottleName) { _, name in
-                        nameValid = !name.isEmpty
-                    }
-
-                Picker("create.win", selection: $newBottleVersion) {
-                    ForEach(WinVersion.allCases.reversed(), id: \.self) {
-                        Text($0.pretty())
-                    }
+            VStack(spacing: 0) {
+                // Header with game library icon
+                VStack(spacing: 12) {
+                    Image(systemName: "gamecontroller.fill")
+                        .font(.system(size: 40))
+                        .foregroundStyle(.purple.gradient)
+                    Text("create.subtitle")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
                 }
+                .padding(.top, 20)
+                .padding(.bottom, 10)
+                
+                Form {
+                    TextField("create.name", text: $newBottleName)
+                        .onChange(of: newBottleName) { _, name in
+                            nameValid = !name.isEmpty
+                        }
 
-                ActionView(
-                    text: "create.path",
-                    subtitle: newBottleURL.prettyPath(),
-                    actionName: "create.browse"
-                ) {
-                    let panel = NSOpenPanel()
-                    panel.canChooseFiles = false
-                    panel.canChooseDirectories = true
-                    panel.allowsMultipleSelection = false
-                    panel.canCreateDirectories = true
-                    panel.directoryURL = BottleData.containerDir
-                    panel.begin { result in
-                        if result == .OK, let url = panel.urls.first {
-                            newBottleURL = url
+                    Picker("create.win", selection: $newBottleVersion) {
+                        ForEach(WinVersion.allCases.reversed(), id: \.self) {
+                            Text($0.pretty())
+                        }
+                    }
+
+                    ActionView(
+                        text: "create.path",
+                        subtitle: newBottleURL.prettyPath(),
+                        actionName: "create.browse"
+                    ) {
+                        let panel = NSOpenPanel()
+                        panel.canChooseFiles = false
+                        panel.canChooseDirectories = true
+                        panel.allowsMultipleSelection = false
+                        panel.canCreateDirectories = true
+                        panel.directoryURL = BottleData.containerDir
+                        panel.begin { result in
+                            if result == .OK, let url = panel.urls.first {
+                                newBottleURL = url
+                            }
                         }
                     }
                 }
+                .formStyle(.grouped)
             }
-            .formStyle(.grouped)
             .navigationTitle("create.title")
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -77,6 +91,8 @@ struct BottleCreationView: View {
                     }
                     .keyboardShortcut(.defaultAction)
                     .disabled(!nameValid)
+                    .buttonStyle(.borderedProminent)
+                    .tint(.purple)
                 }
             }
             .onSubmit {

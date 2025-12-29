@@ -34,14 +34,52 @@ struct ContentView: View {
     @State private var openedFileURL: URL?
     @State private var triggerRefresh: Bool = false
     @State private var refreshAnimation: Angle = .degrees(0)
+    @State private var isDragOver: Bool = false
+    @State private var droppedISO: URL?
 
     @State private var bottleFilter = ""
+    
+    // Supported drop types for drag and drop
+    private let supportedDropTypes: [UTType] = [
+        .exe,
+        UTType(exportedAs: "com.microsoft.msi-installer"),
+        UTType(exportedAs: "com.microsoft.bat"),
+        UTType("public.iso-image") ?? .diskImage
+    ]
 
     var body: some View {
         NavigationSplitView {
             sidebar
         } detail: {
             detail
+        }
+        .overlay {
+            // Drag and drop overlay
+            if isDragOver {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 16)
+                        .fill(.ultraThinMaterial)
+                    VStack(spacing: 16) {
+                        Image(systemName: "arrow.down.doc.fill")
+                            .font(.system(size: 48))
+                            .foregroundStyle(.purple)
+                        Text("dropzone.title")
+                            .font(.title2)
+                            .fontWeight(.semibold)
+                        Text("dropzone.subtitle")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                    }
+                    RoundedRectangle(cornerRadius: 16)
+                        .strokeBorder(style: StrokeStyle(lineWidth: 3, dash: [10]))
+                        .foregroundStyle(.purple.opacity(0.6))
+                }
+                .padding(20)
+            }
+        }
+        .onDrop(of: supportedDropTypes, isTargeted: $isDragOver) { providers in
+            handleDrop(providers: providers)
+            return true
         }
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
@@ -81,6 +119,9 @@ struct ContentView: View {
             FileOpenView(fileURL: url,
                          currentBottle: selected,
                          bottles: bottleVM.bottles)
+        }
+        .sheet(item: $droppedISO) { isoURL in
+            ISODropView(isoURL: isoURL, bottles: bottleVM.bottles, currentBottle: selected)
         }
         .onChange(of: selected) {
             selectedBottleURL = selected
@@ -176,8 +217,16 @@ struct ContentView: View {
             }
         } else {
             if (bottleVM.bottles.isEmpty || bottleVM.countActive() == 0) && bottlesLoaded {
-                VStack {
+                VStack(spacing: 20) {
+                    Image(systemName: "gamecontroller.fill")
+                        .font(.system(size: 64))
+                        .foregroundStyle(.purple.gradient)
                     Text("main.createFirst")
+                        .font(.title2)
+                    Text("main.dragDropHint")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
                     Button {
                         showBottleCreation.toggle()
                     } label: {
@@ -188,8 +237,9 @@ struct ContentView: View {
                         .padding(6)
                     }
                     .buttonStyle(.borderedProminent)
-                    .tint(.accentColor)
+                    .tint(.purple)
                 }
+                .padding()
             }
         }
     }
@@ -202,6 +252,40 @@ struct ContentView: View {
             bottleVM.bottles
                 .filter { $0.settings.name.localizedCaseInsensitiveContains(bottleFilter) }
                 .sorted()
+        }
+    }
+    
+    // Handle drag and drop
+    private func handleDrop(providers: [NSItemProvider]) {
+        for provider in providers {
+            // Check for ISO files first
+            if provider.hasItemConformingToTypeIdentifier("public.iso-image") ||
+               provider.hasItemConformingToTypeIdentifier("public.disk-image") {
+                provider.loadItem(forTypeIdentifier: "public.iso-image", options: nil) { item, _ in
+                    if let url = item as? URL {
+                        DispatchQueue.main.async {
+                            droppedISO = url
+                        }
+                    }
+                }
+                continue
+            }
+            
+            // Handle EXE, MSI, BAT files
+            for typeIdentifier in [UTType.exe.identifier,
+                                   "com.microsoft.msi-installer",
+                                   "com.microsoft.bat"] {
+                if provider.hasItemConformingToTypeIdentifier(typeIdentifier) {
+                    provider.loadItem(forTypeIdentifier: typeIdentifier, options: nil) { item, _ in
+                        if let url = item as? URL {
+                            DispatchQueue.main.async {
+                                openedFileURL = url
+                            }
+                        }
+                    }
+                    break
+                }
+            }
         }
     }
 }

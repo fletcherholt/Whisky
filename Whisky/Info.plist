@@ -52,6 +52,22 @@
 				<string>com.microsoft.windows-executable</string>
 			</array>
 		</dict>
+		<dict>
+			<key>CFBundleTypeIconFile</key>
+			<string></string>
+			<key>CFBundleTypeIconSystemGenerated</key>
+			<integer>0</integer>
+			<key>CFBundleTypeName</key>
+			<string>ISO Disk Image</string>
+			<key>CFBundleTypeRole</key>
+			<string>Viewer</string>
+			<key>LSHandlerRank</key>
+			<string>Alternate</string>
+			<key>LSItemContentTypes</key>
+			<array>
+				<string>public.iso-image</string>
+			</array>
+		</dict>
 	</array>
 	<key>SUFeedURL</key>
 	<string>https://data.getwhisky.app/appcast.xml</string>

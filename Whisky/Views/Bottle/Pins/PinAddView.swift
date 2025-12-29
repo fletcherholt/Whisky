@@ -22,25 +22,45 @@ import WhiskyKit
 struct PinAddView: View {
     let bottle: Bottle
     @State private var showingSheet = false
+    @State private var isHovering = false
 
     var body: some View {
-        VStack {
-            Button {
-                showingSheet = true
-            } label: {
-                Image(systemName: "plus.circle")
-                    .resizable()
-                    .foregroundStyle(.secondary)
+        VStack(spacing: 8) {
+            ZStack {
+                RoundedRectangle(cornerRadius: 16)
+                    .fill(.purple.opacity(isHovering ? 0.15 : 0))
+                    .blur(radius: 10)
+                
+                Button {
+                    showingSheet = true
+                } label: {
+                    Image(systemName: "plus.circle.fill")
+                        .resizable()
+                        .foregroundStyle(.purple.opacity(isHovering ? 1 : 0.6))
+                        .frame(width: 40, height: 40)
+                        .scaleEffect(isHovering ? 1.1 : 1)
+                        .animation(.spring(response: 0.3, dampingFraction: 0.6), value: isHovering)
+                }
+                .buttonStyle(.plain)
             }
-            .buttonStyle(.plain)
-            .frame(width: 45, height: 45)
-            Spacer()
-            Text("pin.help")
+            
+            Text("pin.addGame")
+                .font(.caption)
+                .fontWeight(.medium)
+                .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
                 .lineLimit(2, reservesSpace: true)
         }
-        .frame(width: 90, height: 90)
+        .frame(width: 100, height: 100)
         .padding(10)
+        .background {
+            RoundedRectangle(cornerRadius: 16)
+                .strokeBorder(style: StrokeStyle(lineWidth: 2, dash: [6]))
+                .foregroundStyle(.purple.opacity(isHovering ? 0.5 : 0.2))
+        }
+        .onHover { hovering in
+            isHovering = hovering
+        }
         .sheet(isPresented: $showingSheet) {
             PinCreationView(bottle: bottle)
         }

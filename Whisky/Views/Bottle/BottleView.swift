@@ -31,21 +31,58 @@ struct BottleView: View {
     @State private var path = NavigationPath()
     @State private var programLoading: Bool = false
     @State private var showWinetricksSheet: Bool = false
+    @State private var isDragOver: Bool = false
 
-    private let gridLayout = [GridItem(.adaptive(minimum: 100, maximum: .infinity))]
+    private let gridLayout = [GridItem(.adaptive(minimum: 110, maximum: .infinity))]
+    
+    // Supported drop types
+    private let supportedDropTypes: [UTType] = [
+        .exe,
+        UTType(exportedAs: "com.microsoft.msi-installer"),
+        UTType(exportedAs: "com.microsoft.bat")
+    ]
 
     var body: some View {
         NavigationStack(path: $path) {
             ScrollView {
-                LazyVGrid(columns: gridLayout, alignment: .center) {
-                    ForEach(bottle.pinnedPrograms, id: \.id) { pinnedProgram in
-                        PinView(
-                            bottle: bottle, program: pinnedProgram.program, pin: pinnedProgram.pin, path: $path
-                        )
+                // Game library header with quick actions
+                VStack(spacing: 16) {
+                    if bottle.pinnedPrograms.isEmpty {
+                        // Empty state with drag hint
+                        VStack(spacing: 16) {
+                            Image(systemName: "gamecontroller.fill")
+                                .font(.system(size: 48))
+                                .foregroundStyle(.purple.opacity(0.6))
+                            Text("bottle.emptyState")
+                                .font(.headline)
+                            Text("bottle.dragHint")
+                                .font(.subheadline)
+                                .foregroundStyle(.secondary)
+                                .multilineTextAlignment(.center)
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(40)
+                        .background {
+                            RoundedRectangle(cornerRadius: 16)
+                                .fill(.purple.opacity(isDragOver ? 0.15 : 0.05))
+                                .strokeBorder(style: StrokeStyle(lineWidth: 2, dash: [8]))
+                                .foregroundStyle(.purple.opacity(isDragOver ? 0.6 : 0.2))
+                        }
+                        .padding()
+                    } else {
+                        // Games grid
+                        LazyVGrid(columns: gridLayout, alignment: .center, spacing: 16) {
+                            ForEach(bottle.pinnedPrograms, id: \.id) { pinnedProgram in
+                                PinView(
+                                    bottle: bottle, program: pinnedProgram.program, pin: pinnedProgram.pin, path: $path
+                                )
+                            }
+                            PinAddView(bottle: bottle)
+                        }
+                        .padding()
                     }
-                    PinAddView(bottle: bottle)
                 }
-                .padding()
+                
                 Form {
                     NavigationLink(value: BottleStage.programs) {
                         Label("tab.programs", systemImage: "list.bullet")
@@ -59,6 +96,10 @@ struct BottleView: View {
                 }
                 .formStyle(.grouped)
                 .scrollDisabled(true)
+            }
+            .onDrop(of: supportedDropTypes, isTargeted: $isDragOver) { providers in
+                handleDrop(providers: providers)
+                return true
             }
             .bottomBar {
                 HStack {
@@ -159,6 +200,40 @@ struct BottleView: View {
                     name: program.url.deletingPathExtension().lastPathComponent,
                     url: program.url
                 ))
+            }
+        }
+    }
+    
+    private func handleDrop(providers: [NSItemProvider]) {
+        for provider in providers {
+            for typeIdentifier in [UTType.exe.identifier,
+                                   "com.microsoft.msi-installer",
+                                   "com.microsoft.bat"] {
+                if provider.hasItemConformingToTypeIdentifier(typeIdentifier) {
+                    provider.loadItem(forTypeIdentifier: typeIdentifier, options: nil) { item, _ in
+                        if let url = item as? URL {
+                            runDroppedFile(url: url)
+                        }
+                    }
+                    break
+                }
+            }
+        }
+    }
+    
+    private func runDroppedFile(url: URL) {
+        Task.detached(priority: .userInitiated) {
+            do {
+                if url.pathExtension.lowercased() == "bat" {
+                    try await Wine.runBatchFile(url: url, bottle: bottle)
+                } else {
+                    try await Wine.runProgram(at: url, bottle: bottle)
+                }
+                await MainActor.run {
+                    updateStartMenu()
+                }
+            } catch {
+                print("Failed to run dropped file: \(error)")
             }
         }
     }

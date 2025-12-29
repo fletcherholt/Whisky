@@ -10069,6 +10069,156 @@
         }
       }
     },
+    "main.dragDropHint" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Or drag and drop a game installer or ISO to begin"
+          }
+        }
+      }
+    },
+    "bottle.emptyState" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No Games Added Yet"
+          }
+        }
+      }
+    },
+    "bottle.dragHint" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Drag and drop a game setup file here, or click the + button to add a game"
+          }
+        }
+      }
+    },
+    "dropzone.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Drop to Install"
+          }
+        }
+      }
+    },
+    "dropzone.subtitle" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Drop game installer, ISO, or executable"
+          }
+        }
+      }
+    },
+    "iso.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Install from ISO"
+          }
+        }
+      }
+    },
+    "iso.selectLibrary" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Game Library:"
+          }
+        }
+      }
+    },
+    "iso.selectSetup" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Select Setup Program"
+          }
+        }
+      }
+    },
+    "iso.executable" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Setup:"
+          }
+        }
+      }
+    },
+    "iso.mounting" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mounting ISO..."
+          }
+        }
+      }
+    },
+    "iso.mountAndScan" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mount & Scan"
+          }
+        }
+      }
+    },
+    "iso.install" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Install"
+          }
+        }
+      }
+    },
+    "iso.error.noVolume" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Could not find mounted volume"
+          }
+        }
+      }
+    },
+    "iso.error.mountFailed" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Failed to mount ISO"
+          }
+        }
+      }
+    },
+    "create.subtitle" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Create a new game library to organize your Windows games"
+          }
+        }
+      }
+    },
     "open.bottle" : {
       "localizations" : {
         "ar" : {
@@ -11018,6 +11168,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "釘選程式"
+          }
+        }
+      }
+    },
+    "pin.addGame" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add Game"
           }
         }
       }
