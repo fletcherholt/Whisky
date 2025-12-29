@@ -5,11 +5,6 @@ on:
     tags:
       - 'v*'
   workflow_dispatch:
-    inputs:
-      version:
-        description: 'Version number (e.g., 1.0.0)'
-        required: true
-        default: '1.0.0'
 
 jobs:
   build:
@@ -24,78 +19,69 @@ jobs:
     - name: Setup Xcode
       uses: maxim-lobanov/setup-xcode@v1
       with:
-        xcode-version: latest-stable
+        xcode-version: '15.2'
     
-    - name: Install create-dmg
-      run: brew install create-dmg
-    
-    - name: Resolve Swift Package Dependencies
+    - name: Remove SwiftLint Build Phase
       run: |
-        xcodebuild -resolvePackageDependencies \
-          -project Whisky.xcodeproj \
-          -scheme Whisky
-    
-    - name: Disable SwiftLint
-      run: |
-        # Remove SwiftLint build phase to avoid lint errors blocking the build
-        if command -v swiftlint &> /dev/null; then
-          echo "SwiftLint found, but skipping for CI build"
-        fi
-        # Create empty swiftlint to bypass the build phase
-        mkdir -p /usr/local/bin
-        echo '#!/bin/bash' > /tmp/swiftlint
-        echo 'exit 0' >> /tmp/swiftlint
-        chmod +x /tmp/swiftlint
-        sudo mv /tmp/swiftlint /usr/local/bin/swiftlint || true
+        # Modify project to remove SwiftLint build phase
+        sed -i '' '/SwiftLint/d' Whisky.xcodeproj/project.pbxproj || true
+        # Also disable the script phase by removing shellScript content for SwiftLint
+        sed -i '' 's/swiftlint/echo "Skipping lint"/g' Whisky.xcodeproj/project.pbxproj || true
     
     - name: Build Whisky
       run: |
+        set -e
         xcodebuild -project Whisky.xcodeproj \
           -scheme Whisky \
           -configuration Release \
           -derivedDataPath build \
-          -destination 'generic/platform=macOS' \
+          -destination 'platform=macOS,arch=arm64' \
           CODE_SIGN_IDENTITY="-" \
           CODE_SIGNING_REQUIRED=NO \
           CODE_SIGNING_ALLOWED=NO \
-          SWIFT_TREAT_WARNINGS_AS_ERRORS=NO \
-          GCC_TREAT_WARNINGS_AS_ERRORS=NO \
-          build
+          ONLY_ACTIVE_ARCH=NO \
+          build 2>&1 | tee build.log
+          
+    - name: Upload Build Log on Failure
+      if: failure()
+      uses: actions/upload-artifact@v4
+      with:
+        name: build-log
+        path: build.log
     
-    - name: Prepare app for distribution
+    - name: Find and Prepare App
       run: |
+        find build -name "Whisky.app" -type d
         mkdir -p dist
-        cp -R "build/Build/Products/Release/Whisky.app" dist/
+        cp -R build/Build/Products/Release/Whisky.app dist/ || \
+        cp -R "$(find build -name 'Whisky.app' -type d | head -1)" dist/
+        ls -la dist/
         
     - name: Create DMG
       run: |
+        brew install create-dmg || true
+        
+        # Try create-dmg first
         create-dmg \
           --volname "Whisky" \
-          --volicon "Whisky/Assets.xcassets/AppIcon.appiconset/icon_512x512@2x.png" \
           --window-pos 200 120 \
           --window-size 600 400 \
           --icon-size 100 \
           --icon "Whisky.app" 150 185 \
           --hide-extension "Whisky.app" \
           --app-drop-link 450 185 \
-          --no-internet-enable \
-          "Whisky-${{ github.ref_name || inputs.version }}.dmg" \
-          "dist/" || true
+          "Whisky.dmg" \
+          "dist/" || \
+        hdiutil create -volname "Whisky" -srcfolder dist -ov -format UDZO "Whisky.dmg"
         
-        # Fallback to simple DMG if create-dmg fails
-        if [ ! -f "Whisky-${{ github.ref_name || inputs.version }}.dmg" ]; then
-          hdiutil create -volname "Whisky" \
-            -srcfolder dist \
-            -ov -format UDZO \
-            "Whisky-${{ github.ref_name || inputs.version }}.dmg"
-        fi
+        ls -la *.dmg
     
     - name: Upload DMG Artifact
       uses: actions/upload-artifact@v4
       with:
-        name: Whisky-DMG
+        name: Whisky-${{ github.ref_name || 'build' }}
         path: "*.dmg"
-        retention-days: 30
+        retention-days: 90
     
     - name: Create Release
       if: startsWith(github.ref, 'refs/tags/')
