@@ -159,7 +159,8 @@ struct ISODropView: View {
                     let lines = output.components(separatedBy: "\n")
                     for line in lines where line.contains("/Volumes/") {
                         if let volumeRange = line.range(of: "/Volumes/") {
-                            let volumePath = String(line[volumeRange.lowerBound...]).trimmingCharacters(in: .whitespaces)
+                            let volumePath = String(line[volumeRange.lowerBound...])
+                                .trimmingCharacters(in: .whitespaces)
                             let volumeURL = URL(fileURLWithPath: volumePath)
                             await MainActor.run {
                                 mountedVolume = volumeURL

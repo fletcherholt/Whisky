@@ -206,17 +206,19 @@ struct BottleView: View {
 
     private func handleDrop(providers: [NSItemProvider]) {
         for provider in providers {
-            for typeIdentifier in [UTType.exe.identifier,
-                                   "com.microsoft.msi-installer",
-                                   "com.microsoft.bat"] {
-                if provider.hasItemConformingToTypeIdentifier(typeIdentifier) {
-                    provider.loadItem(forTypeIdentifier: typeIdentifier, options: nil) { item, _ in
-                        if let url = item as? URL {
-                            runDroppedFile(url: url)
-                        }
+            let typeIdentifiers = [
+                UTType.exe.identifier,
+                "com.microsoft.msi-installer",
+                "com.microsoft.bat"
+            ]
+            for typeIdentifier in typeIdentifiers
+            where provider.hasItemConformingToTypeIdentifier(typeIdentifier) {
+                provider.loadItem(forTypeIdentifier: typeIdentifier, options: nil) { item, _ in
+                    if let url = item as? URL {
+                        runDroppedFile(url: url)
                     }
-                    break
                 }
+                break
             }
         }
     }
