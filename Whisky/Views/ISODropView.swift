@@ -23,7 +23,7 @@ struct ISODropView: View {
     var isoURL: URL
     var bottles: [Bottle]
     var currentBottle: URL?
-    
+
     @State private var selection: URL = URL(filePath: "")
     @State private var isMounting: Bool = false
     @State private var mountedVolume: URL?
@@ -31,7 +31,7 @@ struct ISODropView: View {
     @State private var selectedExecutable: URL?
     @State private var errorMessage: String?
     @Environment(\.dismiss) private var dismiss
-    
+
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
@@ -45,7 +45,7 @@ struct ISODropView: View {
                         .lineLimit(1)
                 }
                 .padding(.vertical, 20)
-                
+
                 Form {
                     // Bottle selection
                     Section {
@@ -56,7 +56,7 @@ struct ISODropView: View {
                             }
                         }
                     }
-                    
+
                     // Setup executable selection (after mounting)
                     if !setupExecutables.isEmpty {
                         Section("iso.selectSetup") {
@@ -73,7 +73,7 @@ struct ISODropView: View {
                             .pickerStyle(.radioGroup)
                         }
                     }
-                    
+
                     // Status section
                     if isMounting {
                         Section {
@@ -85,7 +85,7 @@ struct ISODropView: View {
                             }
                         }
                     }
-                    
+
                     if let error = errorMessage {
                         Section {
                             Label(error, systemImage: "exclamationmark.triangle.fill")
@@ -131,44 +131,42 @@ struct ISODropView: View {
             selection = bottles.first(where: { $0.url == currentBottle })?.url ?? bottles[0].url
         }
     }
-    
+
     private func mountISO() {
         isMounting = true
         errorMessage = nil
-        
+
         Task {
             do {
                 // Mount the ISO using hdiutil
                 let process = Process()
                 process.executableURL = URL(fileURLWithPath: "/usr/bin/hdiutil")
                 process.arguments = ["attach", isoURL.path, "-nobrowse", "-readonly"]
-                
+
                 let pipe = Pipe()
                 process.standardOutput = pipe
                 process.standardError = pipe
-                
+
                 try process.run()
                 process.waitUntilExit()
-                
+
                 let data = pipe.fileHandleForReading.readDataToEndOfFile()
                 let output = String(data: data, encoding: .utf8) ?? ""
-                
+
                 if process.terminationStatus == 0 {
                     // Parse mounted volume path from output
                     // Output format: /dev/disk4s1   Apple_HFS   /Volumes/GAME_NAME
                     let lines = output.components(separatedBy: "\n")
-                    for line in lines {
-                        if line.contains("/Volumes/") {
-                            if let volumeRange = line.range(of: "/Volumes/") {
-                                let volumePath = String(line[volumeRange.lowerBound...]).trimmingCharacters(in: .whitespaces)
-                                let volumeURL = URL(fileURLWithPath: volumePath)
-                                await MainActor.run {
-                                    mountedVolume = volumeURL
-                                    scanForSetupFiles(in: volumeURL)
-                                    isMounting = false
-                                }
-                                return
+                    for line in lines where line.contains("/Volumes/") {
+                        if let volumeRange = line.range(of: "/Volumes/") {
+                            let volumePath = String(line[volumeRange.lowerBound...]).trimmingCharacters(in: .whitespaces)
+                            let volumeURL = URL(fileURLWithPath: volumePath)
+                            await MainActor.run {
+                                mountedVolume = volumeURL
+                                scanForSetupFiles(in: volumeURL)
+                                isMounting = false
                             }
+                            return
                         }
                     }
                     await MainActor.run {
@@ -189,21 +187,21 @@ struct ISODropView: View {
             }
         }
     }
-    
+
     private func scanForSetupFiles(in volumeURL: URL) {
         var executables: [URL] = []
-        
+
         // Common setup file patterns for games
         let setupPatterns = ["setup", "install", "autorun", "launcher", "start", "play", "game"]
-        
+
         let fileManager = FileManager.default
-        
+
         // Check root directory first
         if let contents = try? fileManager.contentsOfDirectory(at: volumeURL, includingPropertiesForKeys: nil) {
             for file in contents {
                 let ext = file.pathExtension.lowercased()
                 let name = file.deletingPathExtension().lastPathComponent.lowercased()
-                
+
                 if ext == "exe" || ext == "msi" {
                     // Prioritize setup files
                     let isSetupFile = setupPatterns.contains { name.contains($0) }
@@ -215,7 +213,7 @@ struct ISODropView: View {
                 }
             }
         }
-        
+
         // Check common subdirectories
         let subDirs = ["", "Setup", "Install", "Bin", "Game"]
         for subDir in subDirs {
@@ -229,17 +227,17 @@ struct ISODropView: View {
                 }
             }
         }
-        
+
         setupExecutables = executables
         selectedExecutable = executables.first
     }
-    
+
     private func runSelectedSetup() {
         guard let executable = selectedExecutable,
               let bottle = bottles.first(where: { $0.url == selection }) else {
             return
         }
-        
+
         Task.detached(priority: .userInitiated) {
             do {
                 if executable.pathExtension.lowercased() == "msi" {
@@ -251,10 +249,10 @@ struct ISODropView: View {
                 print("Failed to run setup: \(error)")
             }
         }
-        
+
         dismiss()
     }
-    
+
     private func unmountAndDismiss() {
         if let volume = mountedVolume {
             Task {

@@ -30,7 +30,7 @@ struct PinAddView: View {
                 RoundedRectangle(cornerRadius: 16)
                     .fill(.purple.opacity(isHovering ? 0.15 : 0))
                     .blur(radius: 10)
-                
+
                 Button {
                     showingSheet = true
                 } label: {
@@ -43,7 +43,7 @@ struct PinAddView: View {
                 }
                 .buttonStyle(.plain)
             }
-            
+
             Text("pin.addGame")
                 .font(.caption)
                 .fontWeight(.medium)

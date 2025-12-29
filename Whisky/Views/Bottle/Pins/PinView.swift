@@ -39,7 +39,7 @@ struct PinView: View {
                 RoundedRectangle(cornerRadius: 16)
                     .fill(.purple.opacity(isHovering ? 0.15 : 0))
                     .blur(radius: 10)
-                
+
                 Group {
                     if let image = image {
                         image
@@ -57,7 +57,7 @@ struct PinView: View {
                 .opacity(opening ? 0 : 1)
                 .animation(.spring(response: 0.3, dampingFraction: 0.6), value: isHovering)
             }
-            
+
             Text(name)
                 .font(.caption)
                 .fontWeight(.medium)

@@ -38,7 +38,7 @@ struct ContentView: View {
     @State private var droppedISO: URL?
 
     @State private var bottleFilter = ""
-    
+
     // Supported drop types for drag and drop
     private let supportedDropTypes: [UTType] = [
         .exe,
@@ -254,7 +254,7 @@ struct ContentView: View {
                 .sorted()
         }
     }
-    
+
     // Handle drag and drop
     private func handleDrop(providers: [NSItemProvider]) {
         for provider in providers {
@@ -270,7 +270,7 @@ struct ContentView: View {
                 }
                 continue
             }
-            
+
             // Handle EXE, MSI, BAT files
             for typeIdentifier in [UTType.exe.identifier,
                                    "com.microsoft.msi-installer",

@@ -40,7 +40,7 @@ struct FileOpenView: View {
                         .lineLimit(1)
                 }
                 .padding(.vertical, 20)
-                
+
                 Form {
                     Picker("run.bottle", selection: $selection) {
                         ForEach(bottles, id: \.self) {

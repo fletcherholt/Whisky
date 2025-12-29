@@ -44,7 +44,7 @@ struct BottleCreationView: View {
                 }
                 .padding(.top, 20)
                 .padding(.bottom, 10)
-                
+
                 Form {
                     TextField("create.name", text: $newBottleName)
                         .onChange(of: newBottleName) { _, name in

@@ -34,7 +34,7 @@ struct BottleView: View {
     @State private var isDragOver: Bool = false
 
     private let gridLayout = [GridItem(.adaptive(minimum: 110, maximum: .infinity))]
-    
+
     // Supported drop types
     private let supportedDropTypes: [UTType] = [
         .exe,
@@ -82,7 +82,7 @@ struct BottleView: View {
                         .padding()
                     }
                 }
-                
+
                 Form {
                     NavigationLink(value: BottleStage.programs) {
                         Label("tab.programs", systemImage: "list.bullet")
@@ -203,7 +203,7 @@ struct BottleView: View {
             }
         }
     }
-    
+
     private func handleDrop(providers: [NSItemProvider]) {
         for provider in providers {
             for typeIdentifier in [UTType.exe.identifier,
@@ -220,7 +220,7 @@ struct BottleView: View {
             }
         }
     }
-    
+
     private func runDroppedFile(url: URL) {
         Task.detached(priority: .userInitiated) {
             do {
