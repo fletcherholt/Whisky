@@ -51,10 +51,27 @@ jobs:
     
     - name: Find and Prepare App
       run: |
-        find build -name "Whisky.app" -type d
+        echo "Searching for Whisky.app..."
+        find build -name "*.app" -type d 2>/dev/null || true
         mkdir -p dist
-        cp -R build/Build/Products/Release/Whisky.app dist/ || \
-        cp -R "$(find build -name 'Whisky.app' -type d | head -1)" dist/
+        
+        # Try multiple possible locations
+        if [ -d "build/Build/Products/Release/Whisky.app" ]; then
+          cp -R "build/Build/Products/Release/Whisky.app" dist/
+        elif [ -d "build/Build/Products/Debug/Whisky.app" ]; then
+          cp -R "build/Build/Products/Debug/Whisky.app" dist/
+        else
+          APP_PATH=$(find build -name "Whisky.app" -type d | head -1)
+          if [ -n "$APP_PATH" ]; then
+            cp -R "$APP_PATH" dist/
+          else
+            echo "ERROR: Could not find Whisky.app"
+            find build -type d -name "*.app"
+            exit 1
+          fi
+        fi
+        
+        echo "Contents of dist:"
         ls -la dist/
         
     - name: Create DMG
